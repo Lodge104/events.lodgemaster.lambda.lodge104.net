@@ -1,6 +1,7 @@
 """lodge104-eventattendees Lambda handler.
 
-For every upcoming or in-progress event in the lodge104-event_data table
+For every modern (isModernEvent) upcoming or in-progress event in the
+lodge104-event_data table
 (EVENT_DATA_TABLE_NAME, populated by lodge104-eventdata), fetches the
 event's registrations from the LodgeMaster EventAttendeeGrid OData feed and
 mirrors them into the lodge104-event_attendees table
@@ -20,7 +21,7 @@ import os
 from datetime import datetime, timezone
 
 import boto3
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Attr, Key
 
 import lodgemaster
 
@@ -76,12 +77,18 @@ def _parse_utc(value):
 
 
 def _active_event_ids(events_table):
-    """Ids of events that have not ended yet (upcoming or in progress)."""
+    """Ids of modern events that have not ended yet (upcoming or in progress).
+
+    Legacy (isModernEvent == false) events are skipped: EventAttendeeGrid
+    returns HTTP 500 for them when the grid's registration columns (emergency
+    contacts, dietary needs, EventRecordType, ...) are selected.
+    """
     now = datetime.now(timezone.utc)
     ids = []
     scan_kwargs = {
-        "ProjectionExpression": "#id, endDateTime",
+        "ProjectionExpression": "#id, endDateTime, isModernEvent",
         "ExpressionAttributeNames": {"#id": "id"},
+        "FilterExpression": Attr("isModernEvent").eq(True),
     }
     while True:
         page = events_table.scan(**scan_kwargs)
