@@ -176,9 +176,12 @@ resource "aws_iam_role" "scheduler" {
 
 data "aws_iam_policy_document" "scheduler" {
   statement {
-    sid       = "InvokeSyncFunction"
-    actions   = ["lambda:InvokeFunction"]
-    resources = [aws_lambda_function.event_sync.arn]
+    sid     = "InvokeSyncFunctions"
+    actions = ["lambda:InvokeFunction"]
+    resources = [
+      aws_lambda_function.event_sync.arn,
+      aws_lambda_function.attendees_sync.arn,
+    ]
   }
 }
 

@@ -22,3 +22,13 @@ output "event_data_table_arn" {
   description = "ARN of the DynamoDB table holding LodgeMaster events."
   value       = aws_dynamodb_table.event_data.arn
 }
+
+output "attendees_function_name" {
+  description = "Name of the event attendees sync Lambda function."
+  value       = aws_lambda_function.attendees_sync.function_name
+}
+
+output "event_attendees_table_name" {
+  description = "Name of the DynamoDB table holding event attendees."
+  value       = aws_dynamodb_table.event_attendees.name
+}

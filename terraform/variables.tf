@@ -102,3 +102,42 @@ variable "error_alarm_datapoints_to_alarm" {
   type        = number
   default     = 1
 }
+
+# -----------------------------------------------------------------------------
+# Event attendees sync
+# -----------------------------------------------------------------------------
+variable "attendees_function_name" {
+  description = "Name of the event attendees sync Lambda function."
+  type        = string
+  default     = "lodge104-eventattendees"
+}
+
+variable "event_attendees_table_name" {
+  description = "DynamoDB table that stores attendees of LodgeMaster events. Owned by this configuration."
+  type        = string
+  default     = "lodge104-event_attendees"
+}
+
+variable "attendees_schedule_expression" {
+  description = "EventBridge Scheduler expression for the attendees sync."
+  type        = string
+  default     = "rate(5 minutes)"
+}
+
+variable "attendees_lambda_memory_size" {
+  description = "Attendees Lambda memory in MB."
+  type        = number
+  default     = 512
+}
+
+variable "attendees_lambda_timeout" {
+  description = "Attendees Lambda timeout in seconds. Keep below the schedule interval."
+  type        = number
+  default     = 240
+}
+
+variable "attendees_error_alarm_threshold" {
+  description = "Errors per 15-minute period that count as breaching for the attendees alarm."
+  type        = number
+  default     = 1
+}

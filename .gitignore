@@ -182,3 +182,6 @@ terraform/.build/
 # Captured LodgeMaster requests (contain live session cookies)
 getevents.txt
 geteventdetails.txt
+
+# Captured LodgeMaster requests (contain live session cookies and PII)
+eventattendees.txt
