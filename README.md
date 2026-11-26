@@ -53,12 +53,14 @@ never created or managed here.
 
 ## Deploying
 
-State is stored in S3 using a partial backend config:
+State is stored in the shared `lodge104-terraform-state` S3 bucket under
+`events.lodgemaster.lambda.lodge104.net/terraform.tfstate`, with S3-native
+locking (Terraform >= 1.10). The backend is fully configured in
+`terraform/versions.tf`:
 
 ```bash
 cd terraform
-cp backend.hcl.example backend.hcl   # set the state bucket
-terraform init -backend-config=backend.hcl
+terraform init
 terraform plan
 terraform apply
 ```

@@ -178,7 +178,6 @@ override.tf.json
 .terraformrc
 terraform.rc
 terraform/.build/
-terraform/backend.hcl
 
 # Captured LodgeMaster requests (contain live session cookies)
 getevents.txt
