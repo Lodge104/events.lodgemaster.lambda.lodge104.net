@@ -89,14 +89,16 @@ variable "error_alarm_period_seconds" {
   default     = 3600
 }
 
+# The sync runs only twice a day, so any single failed run must alarm;
+# requiring multiple breaching hourly periods would never trigger.
 variable "error_alarm_evaluation_periods" {
   description = "Number of periods evaluated by the alarm."
   type        = number
-  default     = 3
+  default     = 1
 }
 
 variable "error_alarm_datapoints_to_alarm" {
   description = "Breaching datapoints, out of the evaluation periods, required to alarm."
   type        = number
-  default     = 2
+  default     = 1
 }
