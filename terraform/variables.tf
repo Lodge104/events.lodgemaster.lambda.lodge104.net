@@ -33,9 +33,15 @@ variable "lodgemaster_base_url" {
 }
 
 variable "schedule_expression" {
-  description = "EventBridge schedule expression for the sync."
+  description = "Cron expression for the sync, evaluated in schedule_timezone. Default runs at 00:00 and 12:00."
   type        = string
-  default     = "rate(1 hour)"
+  default     = "cron(0 0,12 * * ? *)"
+}
+
+variable "schedule_timezone" {
+  description = "IANA time zone the schedule_expression is evaluated in."
+  type        = string
+  default     = "America/New_York"
 }
 
 variable "detail_fetch_concurrency" {

@@ -12,7 +12,7 @@ lodge104-lodgemaster-scrapper (separate repo/stack)
 lodge104-keys (DynamoDB, owned by the scrapper)
         │
         ▼
-lodge104-eventdata (this Lambda) ◀── EventBridge schedule (rate(1 hour))
+lodge104-eventdata (this Lambda) ◀── EventBridge Scheduler (noon & midnight, America/New_York)
         │  POST /api/app/login
         │  GET  /api/events/            (list of all events)
         │  GET  /api/events/{id}        (details, once per event)
@@ -44,7 +44,7 @@ detail-only fields (`eventTypeId`, `eventLocationId`, `notes`,
 | `aws_dynamodb_table.event_data` | `lodge104-event_data`, on-demand, PK `id` (N), PITR, deletion protection, `prevent_destroy` |
 | `aws_lambda_function.event_sync` | `lodge104-eventdata`, python3.12/arm64, reserved concurrency 1, no async retries |
 | `aws_iam_role.lambda` + inline policy | Logs to its own log group, `Scan` on `lodge104-keys`, `Scan`/`BatchWriteItem`/`PutItem`/`DeleteItem` on the event table |
-| `aws_cloudwatch_event_rule.schedule` | `var.schedule_expression` (default hourly) |
+| `aws_scheduler_schedule.sync` | `cron(0 0,12 * * ? *)` in `America/New_York` (midnight and noon, DST-aware); invokes the function through its own scheduler role |
 | `aws_cloudwatch_log_group.lambda` | 30-day retention |
 | `aws_cloudwatch_metric_alarm.errors` | Publishes ALARM/OK to the shared `lodge104-lambda` SNS topic |
 

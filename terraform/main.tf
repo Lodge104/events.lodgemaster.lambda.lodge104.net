@@ -151,23 +151,62 @@ resource "aws_lambda_function_event_invoke_config" "event_sync" {
 # -----------------------------------------------------------------------------
 # Schedule
 # -----------------------------------------------------------------------------
-resource "aws_cloudwatch_event_rule" "schedule" {
-  name                = "${var.function_name}-schedule"
-  description         = "Triggers ${var.function_name} to sync LodgeMaster events."
-  schedule_expression = var.schedule_expression
+# EventBridge Scheduler (not CloudWatch Events rules) is used because it
+# accepts a time zone, so the runs stay at noon and midnight New York time
+# across daylight saving changes.
+data "aws_iam_policy_document" "scheduler_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["scheduler.amazonaws.com"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [local.account_id]
+    }
+  }
 }
 
-resource "aws_cloudwatch_event_target" "schedule" {
-  rule = aws_cloudwatch_event_rule.schedule.name
-  arn  = aws_lambda_function.event_sync.arn
+resource "aws_iam_role" "scheduler" {
+  name               = "${var.function_name}-scheduler-role"
+  assume_role_policy = data.aws_iam_policy_document.scheduler_assume_role.json
 }
 
-resource "aws_lambda_permission" "schedule" {
-  statement_id  = "AllowEventBridgeInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.event_sync.function_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.schedule.arn
+data "aws_iam_policy_document" "scheduler" {
+  statement {
+    sid       = "InvokeSyncFunction"
+    actions   = ["lambda:InvokeFunction"]
+    resources = [aws_lambda_function.event_sync.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "scheduler" {
+  name   = "${var.function_name}-scheduler-policy"
+  role   = aws_iam_role.scheduler.id
+  policy = data.aws_iam_policy_document.scheduler.json
+}
+
+resource "aws_scheduler_schedule" "sync" {
+  name                         = "${var.function_name}-schedule"
+  description                  = "Runs ${var.function_name} at noon and midnight New York time."
+  schedule_expression          = var.schedule_expression
+  schedule_expression_timezone = var.schedule_timezone
+  state                        = "ENABLED"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn      = aws_lambda_function.event_sync.arn
+    role_arn = aws_iam_role.scheduler.arn
+
+    retry_policy {
+      maximum_retry_attempts = 0
+    }
+  }
 }
 
 # -----------------------------------------------------------------------------
